@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Distributed Sky Monitor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single observing log, top to bottom. Each section pairs real footage
+   with the one number that proves it. Deliberately dark: it is a sky instrument. */
+:root {
+  --sky: #0c1424;        /* page: high-altitude navy */
+  --sky-2: #121d33;      /* raised panels */
+  --rule: #24314d;
+  --ink: #e9eef7;
+  --ink-2: #9eabc4;
+  --ink-3: #6f7d99;
+  --adsb: #ffc247;       /* the amber of the ADS-B overlay */
+  --trail: #f4f7fb;      /* contrail white */
+  --stereo: #7cc4ff;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--sky); color: var(--ink);
+  font: 400 17px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: var(--adsb); }
+.eyebrow {
+  font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--adsb);
+}
+.lede { color: var(--ink-2); max-width: 62ch; }
+.mono { font-family: var(--mono); }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; padding-block: 56px 40px; }
+.hero h1 { font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -.02em; line-height: .95; }
+.hero .thesis { font: 500 clamp(20px, 2.4vw, 26px)/1.35 var(--display); margin-top: 20px; color: var(--ink); max-width: 24ch; }
+.hero .lede { margin-top: 18px; }
+.dome { position: relative; aspect-ratio: 1; max-width: 100%; border-radius: 50%; overflow: hidden;
+  box-shadow: 0 0 0 1px var(--rule), 0 30px 80px -30px #000; background: var(--sky-2); }
+.dome video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dome-cap { margin-top: 12px; font: 400 13px/1.4 var(--mono); color: var(--ink-3); text-align: center; }
+.compass { position: absolute; inset: 0; pointer-events: none; }
+.compass span { position: absolute; font: 500 12px var(--mono); color: var(--ink-2); }
+
+/* the day's numbers */
+.ledger { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.ledger div { padding: 22px 20px; border-left: 1px solid var(--rule); min-width: 0; }
+.ledger div:first-child { border-left: 0; padding-left: 0; }
+.ledger b { display: block; font: 700 clamp(28px, 4vw, 40px)/1 var(--display); font-variant-numeric: tabular-nums; }
+.ledger span { display: block; margin-top: 8px; font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+.ledger-note { margin-top: 10px; font: 400 12px var(--mono); color: var(--ink-3); }
+
+section { padding-block: 72px 8px; display: grid; gap: 28px; }
+section > header { display: grid; gap: 12px; }
+section h2 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; letter-spacing: -.01em; line-height: 1.1; }
+
+/* system diagram */
+.diagram { overflow-x: auto; background: var(--sky-2); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; }
+.diagram svg { display: block; width: 100%; min-width: 640px; height: auto; }
+
+/* flight clips */
+.flights { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 18px; }
+.flight { background: var(--sky-2); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.flight video { width: 100%; aspect-ratio: 1; display: block; object-fit: cover; background: #000; }
+.tag { padding: 14px 16px 16px; display: grid; gap: 6px; }
+.tag .cs { font: 500 20px/1 var(--mono); color: var(--adsb); letter-spacing: .02em; }
+.tag dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font: 400 13px/1.5 var(--mono); color: var(--ink-2); }
+.tag dt { color: var(--ink-3); }
+.tag dd { margin: 0; font-variant-numeric: tabular-nums; }
+.method { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.method div { border-top: 2px solid var(--adsb); padding-top: 14px; min-width: 0; }
+.method h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.method p { color: var(--ink-2); font-size: 15px; }
+
+/* figures */
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+figure img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--rule); }
+figcaption { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+figcaption b { color: var(--ink); font-weight: 500; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.pair.wide-left { grid-template-columns: 1.4fr 1fr; }
+.chart-light img { background: #fff; }
+.subhead { display: grid; gap: 8px; margin-top: 8px; }
+.subhead h3 { font-size: 20px; font-weight: 700; }
+.note { font-size: 13px; color: var(--ink-3); font-family: var(--mono); margin-top: -10px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button { font: 500 14px var(--body, inherit); color: var(--ink-2); background: transparent; border: 1px solid var(--rule); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--sky); background: var(--adsb); border-color: var(--adsb); }
+.tabs button:focus-visible { outline: 2px solid var(--stereo); outline-offset: 2px; }
+.case { display: grid; gap: 24px; }
+.case[hidden] { display: none; }
+.vol iframe { width: 100%; height: min(78vh, 680px); min-height: 420px; display: block; border: 1px solid var(--rule); border-radius: 10px; background: #070c17; }
+video.wide { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--rule); background: var(--sky); }
+.facts { display: grid; gap: 14px; min-width: 0; }
+.facts .num b { font-size: 26px; }
+
+.numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.num { background: var(--sky-2); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; min-width: 0; }
+.num b { font: 700 34px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--stereo); }
+.num span { display: block; margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+.strip { overflow-x: auto; border-radius: 10px; border: 1px solid var(--rule); }
+.strip img { display: block; height: 180px; width: auto; max-width: none; }
+
+/* stack + contact */
+.stack { display: flex; flex-wrap: wrap; gap: 8px; }
+.stack span { font: 400 13px/1 var(--mono); padding: 9px 12px; border: 1px solid var(--rule); border-radius: 999px; color: var(--ink-2); }
+.contact { background: var(--sky-2); border: 1px solid var(--rule); border-radius: 16px; padding: 32px; display: grid; gap: 14px; }
+.contact h2 { font-size: clamp(26px, 3.2vw, 34px); }
+.placeholder { color: var(--adsb); font-family: var(--mono); font-size: .9em; }
+footer { margin-top: 48px; font: 400 12px/1.6 var(--mono); color: var(--ink-3); }
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; gap: 28px; padding-top: 32px; }
+  .hero .dome-box { max-width: 420px; }
+  .ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ledger div:nth-child(3) { border-left: 0; padding-left: 0; }
+  .ledger div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  .method, .numbers { grid-template-columns: 1fr; }
+  .pair, .pair.wide-left { grid-template-columns: 1fr; }
+  section { padding-top: 56px; }
+}
+@media (prefers-reduced-motion: reduce) { video { animation: none; } }
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const show = c => {
+    document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.case === c)));
+    document.querySelectorAll(".case").forEach(el => {
+      const on = el.id === "case-" + c; el.hidden = !on;
+      const fr = el.querySelector("iframe"), v = el.querySelector("video.sync");
+      if (on && fr && !fr.src) fr.src = fr.dataset.src;
+      if (v) { if (on) { if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); } else v.pause(); }
+    });
+  };
+  document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => show(b.dataset.case)));
+  document.querySelectorAll(".case").forEach(el => {
+    const v = el.querySelector("video.sync"), fr = el.querySelector("iframe");
+    if (!v || !fr) return;
+    fetch(v.dataset.times).then(r => r.json()).then(J => {
+      let last = -1;
+      const push = () => {
+        const i = Math.min(J.t.length - 1, Math.floor(v.currentTime * J.fps));
+        if (i !== last && fr.contentWindow) { last = i; fr.contentWindow.postMessage({ skyT: J.t[i] }, "*"); }
+        if (!v.paused) requestAnimationFrame(push);
+      };
+      v.addEventListener("play", push); v.addEventListener("seeked", push);
+    }).catch(() => {});
+  });
+  const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { show(document.querySelector('.tabs button[aria-selected="true"]').dataset.case); io.disconnect(); } }, { rootMargin: "400px" });
+  const sec = document.getElementById("sky3d"); if (sec) io.observe(sec);
+  document.querySelectorAll("video.slow").forEach(v => { v.playbackRate = 0.6; v.addEventListener("play", () => { v.playbackRate = 0.6; }); });
+});
+</script>
+<style>
+</style>
+
+<div class="wrap">
+
+<div class="hero">
+  <div>
+    <div class="eyebrow">Ground-based sky observatory · edge–cloud AI</div>
+    <h1>Distributed sky monitor with stereo vision</h1>
+    <p class="thesis">Two low-cost fisheye cameras that spot airliners overhead, from 4,000 to 39,000 ft, name them, follow their contrails and map the clouds in 3D.</p>
+    <p class="lede">A Jetson Orin Nano and a Raspberry Pi watch the whole sky. Their images are fused with aircraft transponder signals, airport weather reports and satellite cloud data. Everything on this page is real data from the two stations.</p>
+  </div>
+  <div class="dome-box">
+    <div class="dome">
+      <video src="media/timelapse.mp4" poster="media/timelapse.jpg" autoplay muted loop playsinline aria-label="Time-lapse of a full day of sky seen by the fisheye camera"></video>
+    </div>
+    <p class="dome-cap">14 Nov 2026, 08:25–16:45 UTC · one frame every 5 min (a few missing around midday) · ground masked out</p>
+  </div>
+</div>
+
+<div class="ledger" aria-label="One day of observations, 14 November 2026">
+  <div><b>407</b><span>aircraft passes received by ADS-B</span></div>
+  <div><b>381</b><span>passes within the camera's view of the sky</span></div>
+  <div><b>300</b><span>with a contrail the camera actually saw</span></div>
+  <div><b>0.46°</b><span>median pointing error after self-calibration</span></div>
+</div>
+<p class="ledger-note">Counts: 14 Nov 2026. Calibration error: Jetson station, 23–24 Nov 2026.</p>
+
+<section id="system">
+  <header>
+    <div class="eyebrow">How it works</div>
+    <h2>Cameras, transponders and weather, fused into one picture of the sky</h2>
+    <p class="lede">An edge–cloud design. At the edge, each station runs its own camera and detector on the device and streams only what matters. On the cloud side, the heavy work runs on the archive: deciding which bright dot or white streak is which aircraft, checking the calibration against the sun, and combining the two stations into three dimensions.</p>
+  </header>
+  <div class="diagram">
+    <svg viewBox="0 0 960 330" role="img" aria-label="System diagram: two camera stations and three open data sources feed a fusion pipeline that produces identified flights, contrail attribution and cloud height.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker>
+      </defs>
+      <g font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--ink-2)">
+        <g>
+          <rect x="10" y="20" width="250" height="88" rx="10" fill="var(--sky)" stroke="var(--adsb)"/>
+          <text x="10" y="13" font-size="11" letter-spacing="1.5" fill="var(--adsb)">EDGE · ON-DEVICE</text>
+          <text x="26" y="50" font-family="Archivo, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">Jetson Orin Nano</text>
+          <text x="26" y="74">fisheye camera · live detector</text>
+          <text x="26" y="94">ADS-B receiver</text>
+        </g>
+        <g>
+          <rect x="10" y="126" width="250" height="88" rx="10" fill="var(--sky)" stroke="var(--adsb)"/>
+          <text x="26" y="156" font-family="Archivo, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">Raspberry Pi</text>
+          <text x="26" y="180">second fisheye station</text>
+          <text x="26" y="200">stereo baseline</text>
+        </g>
+        <g>
+          <rect x="10" y="232" width="250" height="88" rx="10" fill="var(--sky)" stroke="var(--ink-3)"/>
+          <text x="26" y="262" font-family="Archivo, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">Open data</text>
+          <text x="26" y="286">METAR airport weather</text>
+          <text x="26" y="306">satellite cloud-top height</text>
+        </g>
+        <g>
+          <rect x="350" y="60" width="260" height="220" rx="12" fill="var(--sky)" stroke="var(--stereo)" stroke-width="1.5"/>
+          <text x="370" y="50" font-size="11" letter-spacing="1.5" fill="var(--stereo)">CLOUD SIDE</text>
+          <text x="370" y="94" font-family="Archivo, sans-serif" font-size="20" font-weight="700" fill="var(--ink)">Fusion pipeline</text>
+          <text x="370" y="126">aircraft &amp; streak tracking</text>
+          <text x="370" y="150">track ↔ ADS-B association</text>
+          <text x="370" y="174">daily self-calibration</text>
+          <text x="370" y="198">contrail search + control</text>
+          <text x="370" y="222">two-station stereo</text>
+          <text x="370" y="254" fill="var(--ink-3)">archive + heavy compute</text>
+        </g>
+        <g>
+          <rect x="700" y="20" width="250" height="88" rx="10" fill="var(--sky)" stroke="var(--trail)"/>
+          <text x="716" y="50" font-family="Archivo, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">Identified flights</text>
+          <text x="716" y="74">callsign, altitude, path</text>
+          <text x="716" y="94">in camera pixels</text>
+        </g>
+        <g>
+          <rect x="700" y="126" width="250" height="88" rx="10" fill="var(--sky)" stroke="var(--trail)"/>
+          <text x="716" y="156" font-family="Archivo, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">Contrail attribution</text>
+          <text x="716" y="180">which aircraft made</text>
+          <text x="716" y="200">which trail</text>
+        </g>
+        <g>
+          <rect x="700" y="232" width="250" height="88" rx="10" fill="var(--sky)" stroke="var(--trail)"/>
+          <text x="716" y="262" font-family="Archivo, sans-serif" font-size="18" font-weight="700" fill="var(--ink)">Sky in 3D</text>
+          <text x="716" y="286">cloud height, sky maps</text>
+          <text x="716" y="306">at cloud altitude</text>
+        </g>
+        <g stroke="var(--ink-3)" stroke-width="1.5" fill="none" marker-end="url(#ar)">
+          <path d="M260 64 C 305 64, 305 120, 348 130"/>
+          <path d="M260 170 L 348 170"/>
+          <path d="M260 276 C 305 276, 305 220, 348 210"/>
+          <path d="M610 130 C 655 120, 655 64, 698 64"/>
+          <path d="M610 170 L 698 170"/>
+          <path d="M610 210 C 655 220, 655 276, 698 276"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section id="aircraft">
+  <header>
+    <div class="eyebrow">Aircraft</div>
+    <h2>From 4,000 to 39,000&thinsp;ft, tracked and identified</h2>
+    <p class="lede">Airliners at cruise altitude are often only one or two pixels wide. The camera tracks each moving dot and compares its path with where the aircraft's own ADS-B broadcast says it is. A name is given only when one aircraft clearly fits better than any other.</p>
+  </header>
+  <div class="subhead">
+    <h3>Cruise altitude: a dot of two pixels, 10&thinsp;km up</h3>
+  </div>
+  <div class="flights">
+    <figure class="flight">
+      <video src="media/clip_4952C1.mp4" poster="media/poster_4952C1.jpg" autoplay muted loop playsinline aria-label="Zoomed camera view following TAP691P"></video>
+      <div class="tag"><span class="cs">TAP691P</span>
+        <dl><dt>altitude</dt><dd>36,975 ft</dd><dt>highest</dt><dd>27° above horizon</dd><dt>contrail</dt><dd>observed</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video src="media/clip_4008AD.mp4" poster="media/poster_4008AD.jpg" autoplay muted loop playsinline aria-label="Zoomed camera view following BAW744 at dusk"></video>
+      <div class="tag"><span class="cs">BAW744</span>
+        <dl><dt>altitude</dt><dd>39,025 ft</dd><dt>highest</dt><dd>61° above horizon</dd><dt>contrail</dt><dd>observed</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video src="media/clip_4D2020.mp4" poster="media/poster_4D2020.jpg" autoplay muted loop playsinline aria-label="Zoomed camera view following WZZ23XB"></video>
+      <div class="tag"><span class="cs">WZZ23XB</span>
+        <dl><dt>altitude</dt><dd>36,975 ft</dd><dt>highest</dt><dd>25° above horizon</dd><dt>contrail</dt><dd>observed</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video src="media/clip_48C2A0.mp4" poster="media/poster_48C2A0.jpg" autoplay muted loop playsinline aria-label="Zoomed camera view following RYR2263"></video>
+      <div class="tag"><span class="cs">RYR2263</span>
+        <dl><dt>altitude</dt><dd>37,000 ft</dd><dt>highest</dt><dd>33° above horizon</dd><dt>contrail</dt><dd>observed</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video src="media/clip_502DAA.mp4" poster="media/poster_502DAA.jpg" autoplay muted loop playsinline aria-label="Zoomed camera view following BTI761 in the early morning"></video>
+      <div class="tag"><span class="cs">BTI761</span>
+        <dl><dt>altitude</dt><dd>37,000 ft</dd><dt>highest</dt><dd>48° above horizon</dd><dt>contrail</dt><dd>observed</dd></dl></div>
+    </figure>
+    <figure class="flight" style="justify-content:center">
+      <div class="tag" style="padding:24px">
+        <span class="eyebrow">Reading the clips</span>
+        <p style="color:var(--ink-2);font-size:15px;margin-top:6px">3× zoom that follows the aircraft. The circle is where ADS-B puts it; the amber dots are its predicted path. Played about 4× faster than real time. All five flights: 14 Nov 2026.</p>
+      </div>
+    </figure>
+  </div>
+  <div class="subhead">
+    <h3>Low-altitude traffic: the aircraft itself</h3>
+    <p class="lede">Closer to the ground the aircraft has a shape. A YOLO detector finds it and a tracker follows it across the frame. On 14 Nov, 49 flights below 25,000 ft were tracked and named this way.</p>
+  </div>
+  <div class="flights">
+    <figure class="flight">
+      <video class="slow" src="media/lowclip_MSR799.mp4" poster="media/lowposter_MSR799.jpg" autoplay muted loop playsinline aria-label="MSR799 tracked by the detector"></video>
+      <div class="tag"><span class="cs">MSR799</span><dl><dt>altitude</dt><dd>3,975 ft</dd><dt>detector</dt><dd>YOLO + tracker</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video class="slow" src="media/lowclip_JAL45.mp4" poster="media/lowposter_JAL45.jpg" autoplay muted loop playsinline aria-label="JAL45 tracked by the detector"></video>
+      <div class="tag"><span class="cs">JAL45</span><dl><dt>altitude</dt><dd>6,275 ft</dd><dt>detector</dt><dd>YOLO + tracker</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video class="slow" src="media/lowclip_AFR099.mp4" poster="media/lowposter_AFR099.jpg" autoplay muted loop playsinline aria-label="AFR099 tracked by the detector"></video>
+      <div class="tag"><span class="cs">AFR099</span><dl><dt>altitude</dt><dd>5,925 ft</dd><dt>detector</dt><dd>YOLO + tracker</dd></dl></div>
+    </figure>
+    <figure class="flight">
+      <video class="slow" src="media/lowclip_AFR475.mp4" poster="media/lowposter_AFR475.jpg" autoplay muted loop playsinline aria-label="AFR475 tracked by the detector"></video>
+      <div class="tag"><span class="cs">AFR475</span><dl><dt>altitude</dt><dd>6,650 ft</dd><dt>detector</dt><dd>YOLO + tracker</dd></dl></div>
+    </figure>
+  </div>
+  <p class="note">Crop that follows the tracker, enlarged about 2×. The amber box is the detector's output in each frame.</p>
+  <div class="method">
+    <div><h3>Track</h3><p>Moving dots and short bright streaks are followed from frame to frame, with real per-frame timestamps.</p></div>
+    <div><h3>Associate</h3><p>Each track is compared with every aircraft in the air. A match needs to sit within 3° and clearly beat the runner-up. Otherwise it stays unnamed.</p></div>
+    <div><h3>Calibrate</h3><p>The confident matches, together with the sun, refine the camera's orientation every day (see below).</p></div>
+  </div>
+</section>
+
+<section id="contrails">
+  <header>
+    <div class="eyebrow">Contrails</div>
+    <h2>Each contrail traced back to the aircraft that made it</h2>
+    <p class="lede">Knowing where the aircraft is, the system searches for a fresh trail starting right behind it. A trail only counts if the same patch of sky was empty just before the aircraft passed. No modelled trails are drawn: only what the camera saw.</p>
+  </header>
+  <div class="pair wide-left">
+    <figure>
+      <img src="media/contrail_streak_evidence.jpg" alt="Contrail streak with its head at the aircraft position predicted from ADS-B, with a zoomed inset">
+      <figcaption><b>Trail head found at the aircraft.</b> Cyan dots: the aircraft's predicted path. The bright streak starts exactly where the aircraft is (circle), shown zoomed on the right.</figcaption>
+    </figure>
+    <figure>
+      <img src="media/adsb_contrail_association.jpg" alt="Two contrails in the sky, one attributed to aircraft 3C4B4B">
+      <figcaption><b>Two trails, one attribution.</b> Only a trail that starts at an aircraft's position gets that aircraft's identity. The second trail in this frame is not attributed.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="calibration">
+  <header>
+    <div class="eyebrow">Self-calibration</div>
+    <h2>The camera works out its own orientation every day</h2>
+    <p class="lede">An outdoor camera shifts a little each time it is touched or remounted. Instead of a manual survey, every evening the system matches the day's aircraft tracks and the sun's position to where they must be, and solves for the camera's exact tilt and heading.</p>
+  </header>
+  <div class="numbers">
+    <div class="num"><b>0.46°</b><span>median error, Jetson station, from 984 aircraft and sun observations over two days</span></div>
+    <div class="num"><b>0.21°</b><span>median error, Raspberry Pi station, from ADS-B sightings over two days</span></div>
+    <div class="num"><b>±0.2°</b><span>stability of the Pi's heading when refitted on random halves of the sightings</span></div>
+  </div>
+  <figure>
+    <div class="strip"><img src="media/yolo_track_crops.jpg" alt="Grid of 42 small crops of aircraft seen by the camera in one day"></div>
+    <figcaption><b>The raw material.</b> Aircraft the detector found in one day, from clear silhouettes to a few grey pixels. Scroll sideways to see more.</figcaption>
+  </figure>
+</section>
+
+<section id="stereo">
+  <header>
+    <div class="eyebrow">Two stations</div>
+    <h2>Two cameras give clouds a height</h2>
+    <p class="lede">The second station sees the same clouds from a slightly different place. Matching the two views gives the cloud height by triangulation, and the two images merge into one map of the sky at that height.</p>
+  </header>
+  <div class="pair">
+    <figure>
+      <img src="media/two_station_sky_map.jpg" alt="Sky map at the stereo cloud height combining both stations, with two aircraft labelled">
+      <figcaption><b>Sky map at 3.9&thinsp;km.</b> Both cameras projected to the cloud layer found by stereo, with aircraft from ADS-B. Scale bar: 1&thinsp;km.</figcaption>
+    </figure>
+    <figure class="chart-light">
+      <img src="media/cloud_height_vs_metar.jpg" alt="Chart of stereo cloud height through one day compared with cloud bases reported by four nearby airports">
+      <figcaption><b>Checked against airports.</b> Stereo cloud height every 5 minutes (blue dots) follows the cloud bases reported by four nearby airports, including the drop to 1.5&thinsp;km around noon. 9 Nov 2026.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="sky3d">
+  <header>
+    <div class="eyebrow">3D reconstruction</div>
+    <h2>Watch the sky, then step inside it</h2>
+    <p class="lede">Two low-cost cameras, the aircraft's own transponder broadcasts and an open satellite feed, fused into a 3D model of the sky you can fly through. First, the raw fisheye video. Then the same five minutes rebuilt in 3D: cloud base measured by stereo, cloud top from the satellite, every aircraft at its true altitude. Two very different skies, one pipeline.</p>
+  </header>
+  <div class="tabs" role="tablist" aria-label="Choose a sky">
+    <button role="tab" id="tab-cirrus" aria-selected="true" data-case="cirrus">High cirrus · 7–10&thinsp;km · 23 Nov</button>
+    <button role="tab" id="tab-low" aria-selected="false" data-case="low">Broken low cloud · 0.8–1.3&thinsp;km · 24 Nov</button>
+  </div>
+
+  <div class="case" id="case-cirrus" role="tabpanel" aria-labelledby="tab-cirrus">
+    <div class="pair wide-left">
+      <figure>
+        <video class="wide sync" src="media/jetson3d.mp4" poster="media/jetson3d.jpg" data-times="media/jetson3d.json" autoplay muted loop playsinline controls aria-label="Jetson fisheye video, 23 Nov 10:39 to 10:44 UTC, with the aircraft it saw labelled"></video>
+        <figcaption><b>The raw feed.</b> Five minutes of a thin cirrus sky from the Jetson, 23 Nov 2026, 10:39–10:44 UTC (143 frames, sped up). Circles mark the six aircraft the camera itself detected, named from their transponders. BAW139's fresh contrail crosses the top left.</figcaption>
+      </figure>
+      <div class="facts">
+      <div class="num"><b>6 of 18</b><span>aircraft in the volume seen by the camera: the four low airliners in view, found by the detector on their ADS-B position along their path, and two cruising jets tracked by their streaks</span></div>
+      <div class="num"><b>250</b><span>cloud-base points from stereo, at 6.8–8.3&thinsp;km; independent Cloudnet radar/lidar put the base at 6.9&thinsp;km</span></div>
+      <div class="num"><b>19.6&thinsp;m/s</b><span>cloud motion measured from the images; the weather model gives 20.8&thinsp;m/s from almost the same direction</span></div>
+      <div class="num"><b>~7&thinsp;km</b><span>of fresh contrail behind BAW139 at 9.9&thinsp;km, seen for about 50&thinsp;s before it blends into the cirrus</span></div>
+      <div class="num"><b>9.7–10.2&thinsp;km</b><span>cloud-top height from the Meteosat satellite, closing the layer from above</span></div>
+    </div>
+    </div>
+    <figure class="vol">
+      <iframe data-src="media/volume.html" title="Interactive 3D sky volume, 23 Nov"></iframe>
+      <figcaption><b>The same five minutes, in 3D. Drag to rotate, scroll to zoom</b>, or try “From the Jetson”. While the video plays, the model follows its clock. The cirrus base comes from two-station stereo (blue points), its top from Meteosat (pink points), its texture from the Jetson's frames, moving with the measured wind. Orange: aircraft below 6&thinsp;km; teal: cruise traffic. <b>Solid</b> = seen by the camera; faint dashed with wireframe markers = known only from ADS-B. White: BAW139's contrail, only where the camera detected it.</figcaption>
+    </figure>
+  </div>
+
+  <div class="case" id="case-low" role="tabpanel" aria-labelledby="tab-low" hidden>
+    <div class="pair wide-left">
+      <figure>
+        <video class="wide sync" data-src="media/jetson3d_1124.mp4" poster="media/jetson3d_1124.jpg" data-times="media/jetson3d_1124.json" muted loop playsinline controls preload="none" aria-label="Jetson fisheye video, 24 Nov 12:30 to 12:35 UTC, a sky of broken low cloud"></video>
+        <figcaption><b>The raw feed.</b> A sky full of separate cloud patches drifting north, 24 Nov 2026, 12:30–12:35 UTC. Above the patches, airliners cruise at 11&thinsp;km, invisible to the camera; only one low aircraft, HOP51BV at 1.5&thinsp;km, shows through the gaps.</figcaption>
+      </figure>
+      <div class="facts">
+        <div class="num"><b>≈1.0&thinsp;km</b><span>median cloud base from 301 consistent stereo points (most between 0.65 and 1.5&thinsp;km)</span></div>
+        <div class="num"><b>1.0–1.3&thinsp;km</b><span>cloud-top height from the Meteosat satellite over the stations: a thin deck, a few hundred metres thick, closed from below by stereo and from above by the satellite</span></div>
+        <div class="num"><b>11.4&thinsp;m/s</b><span>cloud motion measured from the video at the stereo cloud height, from the south-south-east (±0.4&thinsp;m/s over 196 frame pairs, unaffected by the camera's exposure jumps)</span></div>
+        <div class="num"><b>1 of 18</b><span>aircraft in the volume seen by the camera: the cloud deck hides the cruise traffic above it, and the model shows exactly that</span></div>
+      </div>
+    </div>
+    <figure class="vol">
+      <iframe data-src="media/volume_1124.html" title="Interactive 3D sky volume, 24 Nov"></iframe>
+      <figcaption><b>The same five minutes, in 3D.</b> The low deck sits under 1.8&thinsp;km; its gaps come from the camera's own brightness where it can see, and from the satellite's visible image beyond. Blue points: cloud base by stereo. Pink points: Meteosat cloud top, including the higher cloud further south. Same aircraft styling as above.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="built">
+  <header>
+    <div class="eyebrow">Built end to end</div>
+    <h2>From hardware to 3D sky model</h2>
+    <p class="lede">Hardware, embedded software, models, data pipeline and analysis were all designed and built for this project.</p>
+  </header>
+  <div class="stack">
+    <span>Jetson Orin Nano</span><span>Raspberry Pi</span><span>IMX219 / OV5647 fisheye</span><span>ADS-B</span>
+    <span>YOLO detection</span><span>U-Net contrail segmentation</span><span>multi-target tracking</span>
+    <span>camera calibration</span><span>stereo vision</span><span>sensor fusion</span><span>edge–cloud computing</span><span>Python · OpenCV · PyTorch</span>
+    <span>METAR · satellite cloud data</span>
+  </div>
+  <div class="contact">
+    <h2>Open to collaboration on atmospheric sensing and edge computer vision</h2>
+    <p class="lede"><b>Yiru Zhang</b> · Permanent teacher-researcher, ESILV</p>
+  </div>
+</section>
+
+<footer>All images, videos and numbers come from the two stations in November 2026. Station locations are deliberately not shown. Colours corrected for a camera without an infrared filter.</footer>
+</div>
+
+</html>
