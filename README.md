@@ -4,9 +4,7 @@ A demonstration of a low-cost, distributed sky observatory: two fisheye camera s
 Nano and a Raspberry Pi) watch the whole sky, and their images are fused with aircraft transponder
 signals (ADS-B), airport weather reports and open satellite data.
 
-**Live demo:** open [`index.html`](index.html) through GitHub Pages, or download
-[`distributed-sky-monitor-standalone.html`](distributed-sky-monitor-standalone.html) (one self-contained file;
-the interactive 3D view needs an internet connection for its 3D library).
+**Live demo:** <https://leonard-de-vinci.github.io/distributed-sky-monitor/>
 
 ## What it shows
 
