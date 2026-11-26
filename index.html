@@ -433,57 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </section>
 
-<section id="sky3d">
-  <header>
-    <div class="eyebrow">3D reconstruction</div>
-    <h2>Watch the sky, then step inside it</h2>
-    <p class="lede">Two low-cost cameras, the aircraft's own transponder broadcasts and an open satellite feed, fused into a 3D model of the sky you can fly through. First, the raw fisheye video. Then the same five minutes rebuilt in 3D: cloud base measured by stereo, cloud top from the satellite, every aircraft at its true altitude. Two very different skies, one pipeline.</p>
-  </header>
-  <div class="tabs" role="tablist" aria-label="Choose a sky">
-    <button role="tab" id="tab-cirrus" aria-selected="true" data-case="cirrus">High cirrus · 7–10&thinsp;km · 23 Nov</button>
-    <button role="tab" id="tab-low" aria-selected="false" data-case="low">Broken low cloud · 0.8–1.3&thinsp;km · 24 Nov</button>
-  </div>
-
-  <div class="case" id="case-cirrus" role="tabpanel" aria-labelledby="tab-cirrus">
-    <div class="pair wide-left">
-      <figure>
-        <video class="wide sync" src="media/jetson3d.mp4" poster="media/jetson3d.jpg" data-times="media/jetson3d.json" autoplay muted loop playsinline controls aria-label="Jetson fisheye video, 23 Nov 10:39 to 10:44 UTC, with the aircraft it saw labelled"></video>
-        <figcaption><b>The raw feed.</b> Five minutes of a thin cirrus sky from the Jetson, 23 Nov 2026, 10:39–10:44 UTC (143 frames, sped up). Circles mark the six aircraft the camera itself detected, named from their transponders. BAW139's fresh contrail crosses the top left.</figcaption>
-      </figure>
-      <div class="facts">
-      <div class="num"><b>6 of 18</b><span>aircraft in the volume seen by the camera: the four low airliners in view, found by the detector on their ADS-B position along their path, and two cruising jets tracked by their streaks</span></div>
-      <div class="num"><b>250</b><span>cloud-base points from stereo, at 6.8–8.3&thinsp;km; independent Cloudnet radar/lidar put the base at 6.9&thinsp;km</span></div>
-      <div class="num"><b>19.6&thinsp;m/s</b><span>cloud motion measured from the images; the weather model gives 20.8&thinsp;m/s from almost the same direction</span></div>
-      <div class="num"><b>~7&thinsp;km</b><span>of fresh contrail behind BAW139 at 9.9&thinsp;km, seen for about 50&thinsp;s before it blends into the cirrus</span></div>
-      <div class="num"><b>9.7–10.2&thinsp;km</b><span>cloud-top height from the Meteosat satellite, closing the layer from above</span></div>
-    </div>
-    </div>
-    <figure class="vol">
-      <iframe data-src="media/volume.html" title="Interactive 3D sky volume, 23 Nov"></iframe>
-      <figcaption><b>The same five minutes, in 3D. Drag to rotate, scroll to zoom</b>, or try “From the Jetson”. While the video plays, the model follows its clock. The cirrus base comes from two-station stereo (blue points), its top from Meteosat (pink points), its texture from the Jetson's frames, moving with the measured wind. Orange: aircraft below 6&thinsp;km; teal: cruise traffic. <b>Solid</b> = seen by the camera; faint dashed with wireframe markers = known only from ADS-B. White: BAW139's contrail, only where the camera detected it.</figcaption>
-    </figure>
-  </div>
-
-  <div class="case" id="case-low" role="tabpanel" aria-labelledby="tab-low" hidden>
-    <div class="pair wide-left">
-      <figure>
-        <video class="wide sync" data-src="media/jetson3d_1124.mp4" poster="media/jetson3d_1124.jpg" data-times="media/jetson3d_1124.json" muted loop playsinline controls preload="none" aria-label="Jetson fisheye video, 24 Nov 12:30 to 12:35 UTC, a sky of broken low cloud"></video>
-        <figcaption><b>The raw feed.</b> A sky full of separate cloud patches drifting north, 24 Nov 2026, 12:30–12:35 UTC. Above the patches, airliners cruise at 11&thinsp;km, invisible to the camera; only one low aircraft, HOP51BV at 1.5&thinsp;km, shows through the gaps.</figcaption>
-      </figure>
-      <div class="facts">
-        <div class="num"><b>≈1.0&thinsp;km</b><span>median cloud base from 301 consistent stereo points (most between 0.65 and 1.5&thinsp;km)</span></div>
-        <div class="num"><b>1.0–1.3&thinsp;km</b><span>cloud-top height from the Meteosat satellite over the stations: a thin deck, a few hundred metres thick, closed from below by stereo and from above by the satellite</span></div>
-        <div class="num"><b>11.4&thinsp;m/s</b><span>cloud motion measured from the video at the stereo cloud height, from the south-south-east (±0.4&thinsp;m/s over 196 frame pairs, unaffected by the camera's exposure jumps)</span></div>
-        <div class="num"><b>1 of 18</b><span>aircraft in the volume seen by the camera: the cloud deck hides the cruise traffic above it, and the model shows exactly that</span></div>
-      </div>
-    </div>
-    <figure class="vol">
-      <iframe data-src="media/volume_1124.html" title="Interactive 3D sky volume, 24 Nov"></iframe>
-      <figcaption><b>The same five minutes, in 3D.</b> The low deck sits under 1.8&thinsp;km; its gaps come from the camera's own brightness where it can see, and from the satellite's visible image beyond. Blue points: cloud base by stereo. Pink points: Meteosat cloud top, including the higher cloud further south. Same aircraft styling as above.</figcaption>
-    </figure>
-  </div>
-</section>
-
 <section id="accuracy">
   <header>
     <div class="eyebrow">Accuracy</div>
@@ -493,30 +442,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   <div class="subhead">
     <h3>Detection, method by method</h3>
-    <p class="lede">One full day (14 Nov 2026). Every aircraft that passed at least 15° above the horizon, checked against every detector.</p>
+    <p class="lede">One full day (14 Nov 2026). Every aircraft that passed at least 30° above the horizon, checked against every detector. Lower down, aircraft are far away, small and often behind trees or roofs.</p>
   </div>
   <div class="bars" role="table" aria-label="Aircraft passes found by each detection method, 14 Nov 2026">
     <div class="bars-legend" aria-hidden="true"><span><i class="sw img"></i>camera image only</span><span><i class="sw ads"></i>camera + ADS-B position</span></div>
-    <p class="bars-group" role="row"><span role="columnheader">High altitude (≥&thinsp;25,000&thinsp;ft) · 410 passes</span></p>
-    <div class="bar" role="row" title="U-Net contrail segmentation: 22 of 410 passes"><span role="cell">Contrail segmentation (U-Net)</span><span class="track" role="cell"><i class="img" style="width:5.4%"></i></span><b role="cell">22 · 5%</b></div>
-    <div class="bar" role="row" title="YOLO aircraft detector + tracker: 13 of 410 passes"><span role="cell">Aircraft detector (YOLO)</span><span class="track" role="cell"><i class="img" style="width:3.2%"></i></span><b role="cell">13 · 3%</b></div>
-    <div class="bar" role="row" title="Whole-sky streak tracker: 161 of 410 passes"><span role="cell">Whole-sky streak tracker</span><span class="track" role="cell"><i class="img" style="width:39.3%"></i></span><b role="cell">161 · 39%</b></div>
-    <div class="bar" role="row" title="ADS-B-guided streak search: 300 of 410 passes"><span role="cell">ADS-B-guided streak search</span><span class="track" role="cell"><i class="ads" style="width:73.2%"></i></span><b role="cell">300 · 73%</b></div>
-    <p class="bars-group" role="row"><span role="columnheader">Low altitude (&lt;&thinsp;25,000&thinsp;ft) · 305 passes</span></p>
-    <div class="bar" role="row" title="YOLO aircraft detector + tracker, named via ADS-B: 49 of 305 passes"><span role="cell">Aircraft detector (YOLO) + tracker</span><span class="track" role="cell"><i class="ads" style="width:16.1%"></i></span><b role="cell">49 · 16%</b></div>
+    <p class="bars-group" role="row"><span role="columnheader">High altitude (≥&thinsp;25,000&thinsp;ft) · 239 passes</span></p>
+    <div class="bar" role="row" title="U-Net contrail segmentation: 22 of 239 passes"><span role="cell">Contrail segmentation (U-Net)</span><span class="track" role="cell"><i class="img" style="width:9.2%"></i></span><b role="cell">22 · 9%</b></div>
+    <div class="bar" role="row" title="YOLO aircraft detector + tracker: 13 of 239 passes"><span role="cell">Aircraft detector (YOLO)</span><span class="track" role="cell"><i class="img" style="width:5.4%"></i></span><b role="cell">13 · 5%</b></div>
+    <div class="bar" role="row" title="Whole-sky streak tracker: 135 of 239 passes"><span role="cell">Whole-sky streak tracker</span><span class="track" role="cell"><i class="img" style="width:56.5%"></i></span><b role="cell">135 · 56%</b></div>
+    <div class="bar" role="row" title="ADS-B-guided streak search: 212 of 239 passes"><span role="cell">ADS-B-guided streak search</span><span class="track" role="cell"><i class="ads" style="width:88.7%"></i></span><b role="cell">212 · 89%</b></div>
+    <p class="bars-group" role="row"><span role="columnheader">Low altitude (&lt;&thinsp;25,000&thinsp;ft) · 145 passes</span></p>
+    <div class="bar" role="row" title="YOLO aircraft detector + tracker, named via ADS-B: 49 of 145 passes"><span role="cell">Aircraft detector (YOLO) + tracker</span><span class="track" role="cell"><i class="ads" style="width:33.8%"></i></span><b role="cell">49 · 34%</b></div>
   </div>
   <div class="numbers">
-    <div class="num"><b>0.5%</b><span>false alarms of the guided search: 15 hits on 2,888 control paths shifted sideways, where no aircraft flew</span></div>
+    <div class="num"><b>0.5%</b><span>false alarms of the guided search: 15 hits on 2,888 control paths shifted sideways, where no aircraft flew (all elevations)</span></div>
     <div class="num"><b>3°</b><span>naming gate: a track gets a callsign only within 3° of one aircraft and clearly closer than any other, otherwise it stays unnamed</span></div>
-    <div class="num"><b>16%</b><span>of low traffic found by the stock detector, the weakest link; a detector retrained on the stations' own footage is in testing</span></div>
+    <div class="num"><b>34%</b><span>of low traffic found by the stock detector, the weakest link; a detector retrained on the stations' own footage is in testing</span></div>
   </div>
-  <p class="note">A pass "found" means the aircraft or its fresh contrail was seen; not every airliner leaves a contrail, so 73% is a lower bound on what the search catches. On cloudy hours, moving cloud edges raise the false-alarm rate (up to ~5% of control paths), which is why every detection must also start at a known aircraft.</p>
+  <p class="note">A pass "found" means the aircraft or its fresh contrail was seen; not every airliner leaves a contrail, so 89% is a lower bound on what the search catches. Every pass found by the U-Net or the aircraft detector passed above 30°. On cloudy hours, moving cloud edges raise the false-alarm rate (up to ~5% of control paths), which is why every detection must also start at a known aircraft.</p>
 
   <div class="subhead">
     <h3>What each extra data source adds</h3>
   </div>
   <div class="gains">
-    <div><span class="src">ADS-B positions</span><p class="ba"><s>5%</s> → <b>73%</b></p><p>of high-altitude passes found. Image-only segmentation misses thin young contrails; knowing where to look finds them, and the control paths keep it honest.</p></div>
+    <div><span class="src">ADS-B positions</span><p class="ba"><s>9%</s> → <b>89%</b></p><p>of high-altitude passes found (above 30°). Image-only segmentation misses thin young contrails; knowing where to look finds them, and the control paths keep it honest.</p></div>
     <div><span class="src">ADS-B as a clock check</span><p class="ba"><s>6.8°</s> → <b>1.0°</b></p><p>median miss for low aircraft, after the broadcasts revealed a hidden 2&thinsp;s camera delay. Named low flights on 14 Nov went from 0 to 49.</p></div>
     <div><span class="src">Aircraft + sun</span><p class="ba"><s>2.2°</s> → <b>0.21°</b></p><p>pointing error of the second station: its orientation from cloud matching alone, then refined with aircraft sightings. The first station reaches 0.46° from 984 aircraft and sun observations.</p></div>
     <div><span class="src">Second station</span><p class="ba"><b>71 / 75</b></p><p>cloud heights within 0.3&thinsp;km of an independent radar/lidar station; all 75 within 0.5&thinsp;km (9 Nov). One camera alone cannot measure height at all.</p></div>
@@ -586,6 +535,57 @@ document.addEventListener("DOMContentLoaded", () => {
     </table>
   </div>
   <p class="note">Heights above sea level. ADS-B pressure altitude is converted to geometric height with the GNSS–pressure difference each aircraft broadcasts. First station's orientation: fitted on an earlier day. Small sample (6 aircraft, one day); more simultaneous sightings are being collected.</p>
+</section>
+
+<section id="sky3d">
+  <header>
+    <div class="eyebrow">3D reconstruction</div>
+    <h2>Watch the sky, then step inside it</h2>
+    <p class="lede">Two low-cost cameras, the aircraft's own transponder broadcasts and an open satellite feed, fused into a 3D model of the sky you can fly through. First, the raw fisheye video. Then the same five minutes rebuilt in 3D: cloud base measured by stereo, cloud top from the satellite, every aircraft at its true altitude. Two very different skies, one pipeline.</p>
+  </header>
+  <div class="tabs" role="tablist" aria-label="Choose a sky">
+    <button role="tab" id="tab-cirrus" aria-selected="true" data-case="cirrus">High cirrus · 7–10&thinsp;km · 23 Nov</button>
+    <button role="tab" id="tab-low" aria-selected="false" data-case="low">Broken low cloud · 0.8–1.3&thinsp;km · 24 Nov</button>
+  </div>
+
+  <div class="case" id="case-cirrus" role="tabpanel" aria-labelledby="tab-cirrus">
+    <div class="pair wide-left">
+      <figure>
+        <video class="wide sync" src="media/jetson3d.mp4" poster="media/jetson3d.jpg" data-times="media/jetson3d.json" autoplay muted loop playsinline controls aria-label="Jetson fisheye video, 23 Nov 10:39 to 10:44 UTC, with the aircraft it saw labelled"></video>
+        <figcaption><b>The raw feed.</b> Five minutes of a thin cirrus sky from the Jetson, 23 Nov 2026, 10:39–10:44 UTC (143 frames, sped up). Circles mark the six aircraft the camera itself detected, named from their transponders. BAW139's fresh contrail crosses the top left.</figcaption>
+      </figure>
+      <div class="facts">
+      <div class="num"><b>6 of 18</b><span>aircraft in the volume seen by the camera: the four low airliners in view, found by the detector on their ADS-B position along their path, and two cruising jets tracked by their streaks</span></div>
+      <div class="num"><b>250</b><span>cloud-base points from stereo, at 6.8–8.3&thinsp;km; independent Cloudnet radar/lidar put the base at 6.9&thinsp;km</span></div>
+      <div class="num"><b>19.6&thinsp;m/s</b><span>cloud motion measured from the images; the weather model gives 20.8&thinsp;m/s from almost the same direction</span></div>
+      <div class="num"><b>~7&thinsp;km</b><span>of fresh contrail behind BAW139 at 9.9&thinsp;km, seen for about 50&thinsp;s before it blends into the cirrus</span></div>
+      <div class="num"><b>9.7–10.2&thinsp;km</b><span>cloud-top height from the Meteosat satellite, closing the layer from above</span></div>
+    </div>
+    </div>
+    <figure class="vol">
+      <iframe data-src="media/volume.html" title="Interactive 3D sky volume, 23 Nov"></iframe>
+      <figcaption><b>The same five minutes, in 3D. Drag to rotate, scroll to zoom</b>, or try “From the Jetson”. While the video plays, the model follows its clock. The cirrus base comes from two-station stereo (blue points), its top from Meteosat (pink points), its texture from the Jetson's frames, moving with the measured wind. Orange: aircraft below 6&thinsp;km; teal: cruise traffic. <b>Solid</b> = seen by the camera; faint dashed with wireframe markers = known only from ADS-B. White: BAW139's contrail, only where the camera detected it.</figcaption>
+    </figure>
+  </div>
+
+  <div class="case" id="case-low" role="tabpanel" aria-labelledby="tab-low" hidden>
+    <div class="pair wide-left">
+      <figure>
+        <video class="wide sync" data-src="media/jetson3d_1124.mp4" poster="media/jetson3d_1124.jpg" data-times="media/jetson3d_1124.json" muted loop playsinline controls preload="none" aria-label="Jetson fisheye video, 24 Nov 12:30 to 12:35 UTC, a sky of broken low cloud"></video>
+        <figcaption><b>The raw feed.</b> A sky full of separate cloud patches drifting north, 24 Nov 2026, 12:30–12:35 UTC. Above the patches, airliners cruise at 11&thinsp;km, invisible to the camera; only one low aircraft, HOP51BV at 1.5&thinsp;km, shows through the gaps.</figcaption>
+      </figure>
+      <div class="facts">
+        <div class="num"><b>≈1.0&thinsp;km</b><span>median cloud base from 301 consistent stereo points (most between 0.65 and 1.5&thinsp;km)</span></div>
+        <div class="num"><b>1.0–1.3&thinsp;km</b><span>cloud-top height from the Meteosat satellite over the stations: a thin deck, a few hundred metres thick, closed from below by stereo and from above by the satellite</span></div>
+        <div class="num"><b>11.4&thinsp;m/s</b><span>cloud motion measured from the video at the stereo cloud height, from the south-south-east (±0.4&thinsp;m/s over 196 frame pairs, unaffected by the camera's exposure jumps)</span></div>
+        <div class="num"><b>1 of 18</b><span>aircraft in the volume seen by the camera: the cloud deck hides the cruise traffic above it, and the model shows exactly that</span></div>
+      </div>
+    </div>
+    <figure class="vol">
+      <iframe data-src="media/volume_1124.html" title="Interactive 3D sky volume, 24 Nov"></iframe>
+      <figcaption><b>The same five minutes, in 3D.</b> The low deck sits under 1.8&thinsp;km; its gaps come from the camera's own brightness where it can see, and from the satellite's visible image beyond. Blue points: cloud base by stereo. Pink points: Meteosat cloud top, including the higher cloud further south. Same aircraft styling as above.</figcaption>
+    </figure>
+  </div>
 </section>
 
 <section id="built">
