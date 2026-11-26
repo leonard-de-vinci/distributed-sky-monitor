@@ -18,6 +18,10 @@ signals (ADS-B), airport weather reports and open satellite data.
 - **3D reconstruction:** five minutes of sky rebuilt in 3D (cloud base from stereo, cloud top from
   Meteosat, aircraft at their true altitudes), for a high cirrus sky and for broken low cloud. Drag to
   rotate; the model follows the camera video's clock.
+- **Accuracy, measured:** detection rate of each method on one full day (5% of high-altitude passes for
+  image-only contrail segmentation, 73% with the ADS-B-guided search, at 0.5% false alarms on control
+  paths), what each extra data source adds, and aircraft altitude from two-station stereo against ADS-B
+  (within 30 m for low aircraft, −8% to +2% at cruise).
 - **Edge–cloud architecture:** detection runs on the devices; fusion, calibration and 3D reconstruction
   run on the cloud side.
 
